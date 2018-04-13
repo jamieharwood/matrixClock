@@ -49,6 +49,8 @@ def main():
     while True:
         timeNow = rtc.datetime()
 
+        #*************
+        # Display time
         if timeNow[4] < 10:
             displayTimeNow = '0{0}{2}{1}'
         else:
@@ -63,13 +65,30 @@ def main():
         displayTimeNow = displayTimeNow.replace('{1}', str(timeNow[5]))
 
         if displayTimeNow != displayTimeLast:
-            display.fill(0)
-            display.text(str(displayTimeNow),0,0,1)
-            display.show()
-
             displayTimeLast = displayTimeNow
 
-        time.sleep(1)
+        display.fill(0)
+        display.text(str(displayTimeNow),0,0,1)
+
+
+        # *********************
+        # Display seconds pixel
+
+        seconds = timeNow[6]
+        if (seconds/2) == round(seconds/2):
+            #display.rect(15, 0, 2, 1, 1)
+            display.rect(15, 5, 2, 2, 1)
+            #display.pixel(15, 2, 1)
+            #display.pixel(15, 5, 1)
+        else:
+            #display.rect(15, 0, 2, 1, 0)
+            display.rect(15, 5, 2, 2, 0)
+            #display.pixel(15, 2, 0)
+            #display.pixel(15, 5, 0)
+
+        display.show()
+
+        time.sleep(0.25)
 
 main()
 
