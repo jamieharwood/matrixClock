@@ -14,6 +14,13 @@ NTP_DELTA = 3155673600 - addBST
 
 host = '0.uk.pool.ntp.org'
 
+# Graph
+min = 100
+max = 0
+gOff = 8 * 8
+jData = None
+currentTemp = 0
+
 # Neo pixel simple levels
 numSensors = 3
 
@@ -21,28 +28,35 @@ neoLow = 0
 neoMid = 64
 neoHi = 255
 
+ledPower = 3
+#ledNtp = 2
+
+Red = (neoMid, neoLow, neoLow)
+Green = (neoLow, neoMid, neoLow)
+Purple = (neoMid, neoLow, neoMid)
+Black = (neoLow, neoLow, neoLow)
+
 
 def getGraphData():
+    print('def getGraphData():')
+
     url = "http://192.168.86.240:5000/getWeatherGraph/"
     returnString = ''
 
     # print(url)
 
-    try:
-        response = urequests.get(url)
-        returnString = response.text
-        response.close()
+    response = urequests.get(url)
+    returnString = response.text
+    response.close()
 
-        returnString = returnString.replace('\"', '')
+    returnString = returnString.replace('\"', '')
 
-        # print(returnString)
-    except:
-        print('Fail www connect...')
-
+    # print(returnString)
     return returnString
 
-
 def getntptime():
+    print('def getntptime():')
+
     NTP_QUERY = bytearray(48)
     NTP_QUERY[0] = 0x1b
     addr = socket.getaddrinfo(host, 123)[0][-1]
@@ -54,46 +68,92 @@ def getntptime():
     val = ustruct.unpack("!I", msg[40:44])[0]
     return val - NTP_DELTA
 
-
 def settime():
+    print('def settime():')
+
     t = getntptime()
     tm = time.localtime(t)
     tm = tm[0:3] + (0,) + tm[3:6] + (0,)
     rtc = machine.RTC()
     rtc.datetime(tm)
 
+def displayText(display, text, show):
+    display.fill(0)
+    display.text(text, 0, 0, 1)
+
+    if show:
+        display.show()
 
 def main():
-    np = neopixel.NeoPixel(machine.Pin(4), 4)
-
-    np[3] = (neoMid, neoLow, neoLow)
-
-    np[0] = (neoMid, neoLow, neoMid)
-    np[1] = (neoMid, neoLow, neoMid)
-    np[2] = (neoMid, neoLow, neoMid)
-
-    np.write()
-
-    # Set the RTC
-    settime()
-    rtc = RTC()
-
     # Setup display
     spi = SPI(1, baudrate=10000000, polarity=0, phase=0)
 
     display = max7219.Matrix8x8(spi, Pin(15), 12)
     display.brightness(0)
+    displayText(display, 'Init', 1)
+
+    np = neopixel.NeoPixel(machine.Pin(4), 4)
+
+    np[ledPower] = Red  #(neoMid, neoLow, neoLow)  # Red
+
+    np[0] = Purple
+    np[1] = Purple
+    np[2] = Green
+
+    np.write()
 
     # Init the display time variables
+    initLoop = True
+    currHour = 0
+    lastHour = 0
+    hourChanged = False
+
+    currMinute = 0
+    lastMinute = 0
+    minuteChanged = False
+
     timeNow = (0, 0, 0, 0, 0, 0, 0, 0)
     displayTimeNow = ''
     displayTimeLast = ''
 
+    # Set the RTC
+    displayText(display, 'NTP', 1)
+    settime()
+    rtc = RTC()
+    displayText(display, 'Done', 1)
+
+    np[0] = Black
+    np[1] = Black
+    np[2] = Black
+    np.write()
+
     while True:
         timeNow = rtc.datetime()
+        currHour = timeNow[4]
+        currMinute = timeNow[5]
 
-        #*************
+        if currHour != lastHour:
+            np[2] = Green
+            np.write()
+
+            settime()
+
+            timeNow = rtc.datetime()
+            lastHour = currHour
+
+            np[2] = Black
+            np.write()
+            hourChanged = True
+
+        if currMinute != lastMinute:
+            # displayText(display, 'Min', 1)
+
+            lastMinute = currMinute
+            minuteChanged = True
+
+        # ************
         # Display time
+
         if timeNow[4] < 10:
             displayTimeNow = '0{0}{2}{1}'
         else:
@@ -110,9 +170,7 @@ def main():
         if displayTimeNow != displayTimeLast:
             displayTimeLast = displayTimeNow
 
-        display.fill(0)
-        display.text(str(displayTimeNow), 0, 0, 1)
-
+        displayText(display, str(displayTimeNow), 0)
 
         # *********************
         # Display seconds pixel
@@ -123,9 +181,11 @@ def main():
         else:
             display.rect(15, 5, 2, 2, 0)
 
-
+        # *****************
         # Display the graph
-        gData = getGraphData()
+
+        if initLoop or (currMinute in [1, 16, 31, 46] and minuteChanged):
+            gData = getGraphData()
 
         jData = ujson.loads(gData)
         min = 100
@@ -148,6 +208,7 @@ def main():
 
             sample += 1
 
+        # ******************
         # Draw the bar graph
         sample = 31
         for column in jData:
@@ -158,8 +219,19 @@ def main():
 
             sample -= 1
 
+        currentTemp = jData[0]
+
+
+        # Print current temp
+        display.text(str(currentTemp), 32, 0, 1)
+
         display.show()
 
+        hourChanged = False
+        minuteChanged = False
+        initLoop = False
+
+        # print('Loop')
         time.sleep(0.25)
 
 main()
