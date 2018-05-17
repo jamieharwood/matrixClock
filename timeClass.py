@@ -41,12 +41,17 @@ class TimeTank:
             s.close()
             val = struct.unpack("!I", msg[40:44])[0]
 
+            #print('val:' + str(val))
+            #print('NTP:' + str(NTP_DELTA))
+            #print('sum:' + str(val - NTP_DELTA))
+
             return val - self.NTP_DELTA
         except OSError:
 
             return 0
 
     def settime(self, metheod=1):
+        returnvalue = False
 
         if metheod == 0:
             url = "http://192.168.86.240:5000/gettime/"
@@ -75,6 +80,13 @@ class TimeTank:
             tm = tm[0:3] + (0,) + tm[3:6] + (0,)
 
             machine.RTC().datetime(tm)
-            #print('tm[0:3]=' + str(tm[0:3]) + ' tm[3:6]=' + str(tm[3:6]))
+
+            print('tm[0:3]=' + str(tm[0:3]) + ' tm[3:6]=' + str(tm[3:6]))
+
             print(utime.localtime())
+
+            if tm[0] != 2000:
+                returnvalue = True
+
+        return returnvalue
 

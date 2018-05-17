@@ -98,7 +98,10 @@ def main():
 
     # Set the RTC
     mytime = TimeTank()
-    mytime.settime()
+
+    while not mytime.settime():
+        pass
+
     rtc = RTC()
 
     while True:
@@ -110,7 +113,9 @@ def main():
             np.colour(2, 'Green')
             np.write()
 
-            mytime.settime()
+            while not mytime.settime():
+                pass
+            # mytime.settime()
             rtc = RTC()
 
             timeNow = rtc.datetime()
