@@ -69,9 +69,6 @@ def main():
 
     display = max7219.Matrix8x8(spi, Pin(15), 12)
     display.brightness(0)
-    # displayText(display, 'Init', 1)
-
-    # np = neopixel.NeoPixel(machine.Pin(4), 4)
 
     np.colour(ledPower, 'Red')
     np.colour(0, 'Black')
@@ -90,7 +87,6 @@ def main():
     lastMinute = 0
     minuteChanged = False
 
-    # timeNow = (0, 0, 0, 0, 0, 0, 0, 0)
     timeNow = (0 for x in range(0, 8))
 
     displayTimeNow = ''
@@ -115,7 +111,7 @@ def main():
 
             while not mytime.settime():
                 pass
-            # mytime.settime()
+
             rtc = RTC()
 
             timeNow = rtc.datetime()
@@ -127,8 +123,6 @@ def main():
             hourChanged = True
 
         if currMinute != lastMinute:
-            # displayText(display, 'Min', 1)
-
             lastMinute = currMinute
             minuteChanged = True
 
@@ -188,7 +182,7 @@ def main():
                 max = column
 
             sample += 1
-        # print('Mid graph')
+
         # ******************
         # Draw the bar graph
         sample = 31
@@ -205,14 +199,12 @@ def main():
         # Print current temp
         display.text(str(currentTemp), 32, 0, 1)
 
-        # print('End Graph')
         display.show()
 
         hourChanged = False
         minuteChanged = False
         initLoop = False
 
-        # print('Loop')
         time.sleep(0.25)
 
 
