@@ -13,28 +13,31 @@ import ujson
 from timeClass import TimeTank
 from NeoPixelClass import NeoPixel
 
-# addBST = 3600
-# NTP_DELTA = 3155673600 - addBST
-
-# host = '0.uk.pool.ntp.org'
-
 # Graph
-min = 100
-max = 0
-gOff = 8 * 8
-jData = None
-currentTemp = 0
+__min = 100
+__max = 0
+__gOff = 8 * 8
+__jData = None
+__currentTemp = 0
 
-# Neo pixel simple levels
-numSensors = 3
+# Neo pixel
+__neoPin = 4
+__np = NeoPixel(__neoPin, 4)
+__ledPower = 3
 
-neoPin = 4
+__gData = [0. for x in range(0, 32)]
 
-np = NeoPixel(neoPin, 4)
+# Setup display
+__spi = SPI(1, baudrate=10000000, polarity=0, phase=0)
 
-ledPower = 3
+__display = max7219.Matrix8x8(__spi, Pin(15), 12)
+__display.brightness(0)
 
-gData = [0. for x in range(0, 32)]
+__np.colour(__ledPower, 'Red')
+__np.colour(0, 'Black')
+__np.colour(1, 'Black')
+__np.colour(2, 'Black')
+__np.write()
 
 
 def getGraphData():
@@ -64,19 +67,6 @@ def displayText(display, text, show):
 
 
 def main():
-    # Setup display
-    spi = SPI(1, baudrate=10000000, polarity=0, phase=0)
-
-    display = max7219.Matrix8x8(spi, Pin(15), 12)
-    display.brightness(0)
-
-    np.colour(ledPower, 'Red')
-    np.colour(0, 'Black')
-    np.colour(1, 'Black')
-    np.colour(2, 'Black')
-
-    np.write()
-
     # Init the display time variables
     initLoop = True
     currHour = 0
@@ -106,8 +96,8 @@ def main():
         currMinute = timeNow[5]
 
         if currHour != lastHour:
-            np.colour(2, 'Green')
-            np.write()
+            __np.colour(2, 'Green')
+            __np.write()
 
             while not mytime.settime():
                 pass
@@ -118,8 +108,8 @@ def main():
             lastHour = currHour
             local = time.localtime()
 
-            np.colour(2, 'Black')
-            np.write()
+            __np.colour(2, 'Black')
+            __np.write()
             hourChanged = True
 
         if currMinute != lastMinute:
@@ -145,61 +135,61 @@ def main():
         if displayTimeNow != displayTimeLast:
             displayTimeLast = displayTimeNow
 
-        displayText(display, str(displayTimeNow), 0)
+        displayText(__display, str(displayTimeNow), 0)
 
         # *********************
         # Display seconds pixel
 
         seconds = timeNow[6]
         if (seconds/2) == round(seconds/2):
-            display.rect(15, 5, 2, 2, 1)
+            __display.rect(15, 5, 2, 2, 1)
         else:
-            display.rect(15, 5, 2, 2, 0)
+            __display.rect(15, 5, 2, 2, 0)
 
         # *****************
         # Display the graph
 
         if initLoop or (currMinute in [1, 16, 31, 46] and minuteChanged):
-            gData = getGraphData()
+            __gData = getGraphData()
 
-        jData = ujson.loads(gData)
-        min = 100
-        max = 0
+        __jData = ujson.loads(__gData)
+        __min = 100
+        __max = 0
 
-        gOff = 8 * 8
+        __gOff = 8 * 8
 
-        display.line(gOff, 0, gOff, 7, 1)
-        display.line(gOff, 7, gOff + 32, 7, 1)
+        __display.line(__gOff, 0, __gOff, 7, 1)
+        __display.line(__gOff, 7, __gOff + 32, 7, 1)
 
-        # Get min and max
+        # Get min and __max
         sample = 0
-        for column in jData:
-            # print(jData[sample])
+        for column in __jData:
+            # print(__jData[sample])
 
-            if column < min:
-                min = column
-            if column > max:
-                max = column
+            if column < __min:
+                __min = column
+            if column > __max:
+                __max = column
 
             sample += 1
 
         # ******************
         # Draw the bar graph
         sample = 31
-        for column in jData:
+        for column in __jData:
 
-            bar = round(7 - (7 / (max - min)) * (column - min))
+            bar = round(7 - (7 / (__max - __min)) * (column - __min))
 
-            display.line(gOff + sample, 7, gOff + sample, bar, 1)
+            __display.line(__gOff + sample, 7, __gOff + sample, bar, 1)
 
             sample -= 1
 
-        currentTemp = jData[0]
+        __currentTemp = __jData[0]
 
         # Print current temp
-        display.text(str(currentTemp), 32, 0, 1)
+        __display.text(str(__currentTemp), 32, 0, 1)
 
-        display.show()
+        __display.show()
 
         hourChanged = False
         minuteChanged = False
