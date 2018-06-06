@@ -40,25 +40,25 @@ __np.colour(2, 'Black')
 __np.write()
 
 
-def getGraphData():
-    print('def getGraphData():')
+def getgraphdata():
+    print('def getgraphdata():')
 
-    url = "http://192.168.86.240:5000/getWeatherGraph/"
-    returnString = ''
+    resthost = "http://192.168.86.240:5000/getWeatherGraph/"
+    returnstring = ''
 
-    # print(url)
+    # print(resthost)
 
-    response = urequests.get(url)
-    returnString = response.text
+    response = urequests.get(resthost)
+    returnstring = response.text
     response.close()
 
-    returnString = returnString.replace('\"', '')
+    returnstring = returnstring.replace('\"', '')
 
-    # print(returnString)
-    return returnString
+    # print(returnstring)
+    return returnstring
 
 
-def displayText(display, text, show):
+def displaytext(display, text, show):
     display.fill(0)
     display.text(text, 0, 0, 1)
 
@@ -135,7 +135,7 @@ def main():
         if displayTimeNow != displayTimeLast:
             displayTimeLast = displayTimeNow
 
-        displayText(__display, str(displayTimeNow), 0)
+        displaytext(__display, str(displayTimeNow), 0)
 
         # *********************
         # Display seconds pixel
@@ -150,7 +150,7 @@ def main():
         # Display the graph
 
         if initLoop or (currMinute in [1, 16, 31, 46] and minuteChanged):
-            __gData = getGraphData()
+            __gData = getgraphdata()
 
         __jData = ujson.loads(__gData)
         __min = 100
@@ -168,6 +168,7 @@ def main():
 
             if column < __min:
                 __min = column
+
             if column > __max:
                 __max = column
 
@@ -198,5 +199,7 @@ def main():
         time.sleep(0.25)
 
 
-main()
+if __name__ == "__main__":
+    # execute only if run as a script
+    main()
 
