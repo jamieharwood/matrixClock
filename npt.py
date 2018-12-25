@@ -1,3 +1,10 @@
+#!/usr/bin/env python3
+
+"""
+Trilby Tanks 2018 copyright
+Module: npt
+"""
+
 # borrowed from https://github.com/micropython/micropython/blob/master/esp8266/scripts/ntptime.py
 import socket
 import machine

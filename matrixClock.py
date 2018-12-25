@@ -39,7 +39,6 @@ __np.colour(1, 'Black')
 __np.colour(2, 'Black')
 __np.write()
 
-
 def getgraphdata():
     print('def getgraphdata():')
 

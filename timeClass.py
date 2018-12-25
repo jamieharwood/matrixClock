@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import urequests
 import machine
@@ -17,7 +17,9 @@ class TimeTank:
     __deviceid = ''
 
     # (date(2000, 1, 1) - date(1900, 1, 1)).days * 24*60*60
-    addBST = 3600
+    #addBST = 3600 # BST
+    addBST = 0      # GMT
+    
     NTP_DELTA = 3155673600 - addBST
 
     __hostpointer = 0
